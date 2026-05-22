@@ -60,6 +60,13 @@ This ledger documents the AI-assisted prompts, intents, outputs, and debugging s
 - **Output/Changes**: Updated `guru_app/lib/features/calls/call_screen.dart` and `trainer_app/lib/features/calls/call_screen.dart` to render simulated active avatars when local or remote video tracks are null during real HMSSDK sessions.
 - **Commit Link**: `N/A`
 
+### Entry 9
+- **Prompt #**: 9
+- **Tool**: Antigravity (Gemini 3.5 Flash)
+- **Intent**: Create root README.md summarizing project structure, setup, architectural features, and walkthrough video reference. Commit and push code to remote.
+- **Output/Changes**: Created `README.md` at root and committed/pushed workspace changes to GitHub.
+- **Commit Link**: `N/A` (Current commit)
+
 ---
 
 ## Debugging Sessions with AI
