@@ -259,8 +259,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        if (callService.isRealHMSUsed)
-                          if (hmsState.remoteVideoTrack != null && hmsState.isRemoteVideoOn)
+                        if (hmsState.isRemoteVideoOn && hmsState.remoteParticipantName != null)
+                          if (callService.isRealHMSUsed && hmsState.remoteVideoTrack != null)
                             ClipRRect(
                               borderRadius: BorderRadius.circular(16.0),
                               child: HMSVideoView(
@@ -270,18 +270,6 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                               ),
                             )
                           else
-                            const Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.videocam_off, size: 64, color: Colors.white30),
-                                  SizedBox(height: 8),
-                                  Text('Member Video Muted', style: TextStyle(color: Colors.white30)),
-                                ],
-                              ),
-                            )
-                        else
-                          if (hmsState.isRemoteVideoOn && hmsState.remoteParticipantName != null)
                             Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -297,17 +285,17 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                                 ],
                               ),
                             )
-                          else
-                            const Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.videocam_off, size: 64, color: Colors.white30),
-                                  SizedBox(height: 8),
-                                  Text('Member Video Muted', style: TextStyle(color: Colors.white30)),
-                                ],
-                              ),
+                        else
+                          const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.videocam_off, size: 64, color: Colors.white30),
+                                SizedBox(height: 8),
+                                Text('Member Video Muted', style: TextStyle(color: Colors.white30)),
+                              ],
                             ),
+                          ),
                         Positioned(
                           bottom: 12,
                           left: 12,
@@ -350,8 +338,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        if (callService.isRealHMSUsed)
-                          if (hmsState.localVideoTrack != null && hmsState.isLocalVideoOn)
+                        if (hmsState.isLocalVideoOn)
+                          if (callService.isRealHMSUsed && hmsState.localVideoTrack != null)
                             ClipRRect(
                               borderRadius: BorderRadius.circular(16.0),
                               child: HMSVideoView(
@@ -362,18 +350,6 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                               ),
                             )
                           else
-                            const Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.videocam_off, size: 64, color: Colors.white30),
-                                  SizedBox(height: 8),
-                                  Text('Video Off', style: TextStyle(color: Colors.white30)),
-                                ],
-                              ),
-                            )
-                        else
-                          if (hmsState.isLocalVideoOn)
                             Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -389,17 +365,17 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                                 ],
                               ),
                             )
-                          else
-                            const Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.videocam_off, size: 64, color: Colors.white30),
-                                  SizedBox(height: 8),
-                                  Text('Video Off', style: TextStyle(color: Colors.white30)),
-                                ],
-                              ),
+                        else
+                          const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.videocam_off, size: 64, color: Colors.white30),
+                                SizedBox(height: 8),
+                                Text('Video Off', style: TextStyle(color: Colors.white30)),
+                              ],
                             ),
+                          ),
                         Positioned(
                           bottom: 12,
                           left: 12,

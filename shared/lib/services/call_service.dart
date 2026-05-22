@@ -195,6 +195,14 @@ class CallService extends HMSUpdateListener {
       throw Exception('No Room meta found');
     }
 
+    // Determine dynamically if real HMS should be used
+    if (roomMeta.hmsRoomId.startsWith('mock_room')) {
+      _isRealHMSUsed = false;
+      AppLogger.rtc('Mock room ID detected: ${roomMeta.hmsRoomId}. Falling back to high-fidelity calling simulator.');
+    } else {
+      _isRealHMSUsed = !kIsWeb && Platform.isAndroid;
+    }
+
     final hmsRole = currentUser.role == UserRole.trainer 
         ? roomMeta.hmsRoleTrainer 
         : roomMeta.hmsRoleMember;
@@ -208,9 +216,20 @@ class CallService extends HMSUpdateListener {
       roomId: roomMeta.hmsRoomId,
     );
 
+    final currentState = _ref.read(hmsStateProvider);
     _ref.read(hmsStateProvider.notifier).state = HMSState(
+      isLocalAudioOn: currentState.isLocalAudioOn,
+      isLocalVideoOn: currentState.isLocalVideoOn,
+      isLocalCameraFlipped: false,
+      isRemoteAudioOn: true,
+      isRemoteVideoOn: true,
+      isRemoteCameraFlipped: false,
       isConnected: false,
       isReconnecting: false,
+      remoteParticipantName: null,
+      peers: const [],
+      localVideoTrack: null,
+      remoteVideoTrack: null,
     );
 
     if (_isRealHMSUsed) {
@@ -245,17 +264,19 @@ class CallService extends HMSUpdateListener {
       
       AppLogger.rtc('[SIMULATOR] Joined call room successfully');
       
-      _simSignalTimer?.cancel();
-      _simSignalTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-        _syncSimulatedState();
-      });
-      await _syncSimulatedState();
-      
       // Simulate micro connection instability for testing network resilience
       _simulationTimer = Timer(const Duration(seconds: 12), () {
         simulateNetworkBlink();
       });
     }
+
+    // Always start the simulated signaling sync loop (for cross-platform compatibility
+    // and fallback status synchronization between Android emulators and macOS desktop)
+    _simSignalTimer?.cancel();
+    _simSignalTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      _syncSimulatedState();
+    });
+    await _syncSimulatedState();
   }
 
   void simulateNetworkBlink() {
@@ -358,9 +379,7 @@ class CallService extends HMSUpdateListener {
     _reconnectSimTimer?.cancel();
     _simSignalTimer?.cancel();
 
-    if (!_isRealHMSUsed) {
-      await _syncSimulatedState(isLeaving: true);
-    }
+    await _syncSimulatedState(isLeaving: true);
 
     if (_isRealHMSUsed && _hmsSdk != null) {
       await _hmsSdk!.leave();
@@ -369,6 +388,7 @@ class CallService extends HMSUpdateListener {
     }
 
     _ref.read(hmsStateProvider.notifier).state = HMSState(isConnected: false);
+    _isRealHMSUsed = !kIsWeb && Platform.isAndroid;
 
     // Save Session Log automatically if we have start/end times
     if (_callStartTime != null && _activeCallRequestId != null) {
@@ -407,9 +427,7 @@ class CallService extends HMSUpdateListener {
     );
     AppLogger.rtc('Toggled microphone: $nextState');
 
-    if (!_isRealHMSUsed) {
-      _syncSimulatedState();
-    }
+    _syncSimulatedState();
   }
 
   void toggleVideo() {
@@ -426,9 +444,7 @@ class CallService extends HMSUpdateListener {
     );
     AppLogger.rtc('Toggled video: $nextState');
 
-    if (!_isRealHMSUsed) {
-      _syncSimulatedState();
-    }
+    _syncSimulatedState();
   }
 
   void flipCamera() {
@@ -444,14 +460,31 @@ class CallService extends HMSUpdateListener {
     );
     AppLogger.rtc('Flipped camera to: ${nextState ? "Back" : "Front"}');
 
-    if (!_isRealHMSUsed) {
-      _syncSimulatedState();
-    }
+    _syncSimulatedState();
   }
 
   // --- HMSUpdateListener Override Methods ---
   @override
   void onJoin({required HMSRoom room}) {
+    // Preserve local audio/video settings and camera selection from the pre-join state
+    final currentState = _ref.read(hmsStateProvider);
+    final initialAudio = currentState.isLocalAudioOn;
+    final initialVideo = currentState.isLocalVideoOn;
+    final initialCameraFlipped = currentState.isLocalCameraFlipped;
+
+    // Apply the local state configuration to the real HMSSDK instance
+    if (_isRealHMSUsed && _hmsSdk != null) {
+      if (!initialAudio) {
+        _hmsSdk!.switchAudio(isOn: false);
+      }
+      if (!initialVideo) {
+        _hmsSdk!.switchVideo(isOn: false);
+      }
+      if (initialCameraFlipped) {
+        _hmsSdk!.switchCamera();
+      }
+    }
+
     final remotePeers = room.peers?.where((p) => !p.isLocal).toList() ?? [];
     final remotePeer = remotePeers.isNotEmpty ? remotePeers.first : null;
     
@@ -481,6 +514,9 @@ class CallService extends HMSUpdateListener {
 
     _ref.read(hmsStateProvider.notifier).state = HMSState(
       isConnected: true,
+      isLocalAudioOn: initialAudio,
+      isLocalVideoOn: initialVideo,
+      isLocalCameraFlipped: initialCameraFlipped,
       remoteParticipantName: remotePeer?.name,
       isRemoteVideoOn: !isRemoteVideoMuted,
       isRemoteAudioOn: !isRemoteAudioMuted,

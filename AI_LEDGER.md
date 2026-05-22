@@ -39,11 +39,25 @@ This ledger documents the AI-assisted prompts, intents, outputs, and debugging s
 - **Output/Changes**: Modified the Sessions screen in both `trainer_app` and `guru_app` to include a TabBar with "Upcoming Sessions" and "Session History" tabs. Upcoming sessions lists approved calls that do not have a completed session log, and provides a direct "Join Call" button to start the session.
 - **Commit Link**: `N/A`
 
-### Entry 6
+#### Entry 6
 - **Prompt #**: 6
 - **Tool**: Antigravity (Gemini 3.5 Flash)
 - **Intent**: Implement Simulated Call State Synchronization for non-Android clients running on macOS Desktop or Web.
 - **Output/Changes**: Added simulated calling state synchronization (polling the token server every 500ms and posting local state) to `CallService` in `call_service.dart`. Synchronized camera flip and audio/video mute states across running desktop clients. Updated call screens (`guru_app` and `trainer_app`) to display front/back camera state strings dynamically and handle flip button styling.
+- **Commit Link**: `N/A`
+
+### Entry 7
+- **Prompt #**: 7
+- **Tool**: Antigravity (Gemini 3.5 Flash)
+- **Intent**: Fix local audio/video mute/unmute and camera flip settings overwrite on real HMSSDK join.
+- **Output/Changes**: Updated `onJoin` in `CallService` to retrieve the current state's local settings and apply them to the HMSSDK instance immediately after joining the room, while preserving these configurations in the newly constructed `HMSState`.
+- **Commit Link**: `N/A`
+
+### Entry 8
+- **Prompt #**: 8
+- **Tool**: Antigravity (Gemini 3.5 Flash)
+- **Intent**: Implement UI Fallbacks for Real HMSSDK Video Tracks.
+- **Output/Changes**: Updated `guru_app/lib/features/calls/call_screen.dart` and `trainer_app/lib/features/calls/call_screen.dart` to render simulated active avatars when local or remote video tracks are null during real HMSSDK sessions.
 - **Commit Link**: `N/A`
 
 ---
@@ -81,7 +95,24 @@ This ledger documents the AI-assisted prompts, intents, outputs, and debugging s
   1. Updated the Node token server's `/api/chat` POST route to set `status = msg.status === 'sending' ? 'sent' : (msg.status || 'sent')` to transition new client-generated messages to 'sent'.
   2. Changed `/api/sync` message filtering from `createdAt` to `updatedAt` to ensure updates (like status changes to `'read'`) sync successfully and to fix time skew syncing bugs.
   3. Ensured system-generated chat messages in `server.js` also write `updatedAt`.
+  4. Resolved sync polling frequency issues.
 - **Result**: Messages transition from loading spinner to checkmark immediately on response from the server, and sync instantly to the peer application.
+
+### Debugging Entry 6
+- **Date**: 2026-05-22
+- **Issue**: Directory renamed from `wft gyme app` to `wft_assignment_apps` resulted in IDE run configurations, package configurations (`.dart_tool`), and android gradle build configurations pointing to the old absolute paths, causing an entrypoint file not found error (`/Users/shanacoder/Documents/wft gyme app/trainer_app/lib/main.dart`) when running from Android Studio.
+- **Resolution**:
+  1. Ran `flutter clean` across all packages (`shared`, `guru_app`, `trainer_app`) to wipe absolute-path build/compiler caches.
+  2. Deleted android `.gradle` build cache directories.
+  3. Fixed the hardcoded `last_opened_file_path` inside `.idea/workspace.xml` configurations.
+  4. Ran `flutter pub get` to regenerate correct package configs (`.dart_tool/package_config.json`) pointing to the new folder location.
+- **Result**: Both applications now build, test, and run flawlessly in Android Studio under the new directory.
+
+### Debugging Entry 7
+- **Date**: 2026-05-22
+- **Issue**: On joining a real HMSSDK room, the local user's selected mute settings (mic or camera toggled off in the pre-join check screen) were being ignored, starting unmuted, and the UI state was overwritten to 'true' (unmuted) by default.
+- **Resolution**: Read the pre-join state in the `onJoin` callback, called `switchAudio`/`switchVideo`/`switchCamera` on the HMSSDK instance to apply them, and constructed the updated `HMSState` using those preserved configurations.
+- **Result**: Initial audio, video, and camera flip choices from the device preview check now apply correctly when entering a live call room.
 
 ---
 
@@ -101,4 +132,9 @@ This ledger documents the AI-assisted prompts, intents, outputs, and debugging s
 - **Date**: 2026-05-22
 - **Files Modified**: `shared/lib/services/call_service.dart`, `guru_app/lib/features/calls/call_screen.dart`, `trainer_app/lib/features/calls/call_screen.dart`
 - **Description**: Refactored `CallService` to support simulated calling state synchronization via HTTP polling to coordinate participant track changes (audio/video mute and camera flip) across desktop/simulator instances. Extended the upcoming call filter to allow day-of-call join access.
+
+### Refactoring Entry 4
+- **Date**: 2026-05-22
+- **Files Modified**: `guru_app/lib/features/calls/call_screen.dart`, `trainer_app/lib/features/calls/call_screen.dart`
+- **Description**: Unified local and remote video rendering logic on call screens to smoothly fall back to simulated active avatars when real WebRTC/HMSSDK tracks are null.
 
