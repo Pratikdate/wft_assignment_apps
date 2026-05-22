@@ -11,7 +11,7 @@ Welcome to the **WTF Gym App** monorepo! This repository contains a paired ecosy
 ## 📽️ Project Walkthrough Video
 
 A complete end-to-end screen recording walkthrough is included directly in the root of the repository:
-* **File Location**: [Screen Recording 2026-05-22 at 4.25.55 PM.mov](file:///Users/shanacoder/Documents/wft_assignment_apps/Screen%20Recording%202026-05-22%20at%204.25.55%20PM.mov)
+* **File Location**: [https://drive.google.com/file/d/1V_gDq9Nn1t8jAx9Xc7EWX_xCY0FCvD0U/view?usp=sharing])
 * **What it demonstrates**:
   * Side-by-side execution of Guru App and Trainer App.
   * Local synchronization and real-time chat with typing states and read receipts.
